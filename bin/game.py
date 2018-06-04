@@ -64,7 +64,7 @@ class Game:
             # Ход игрока
             if not walk:
                 while type(coordinate) != list:
-                    coordinate = [randint(1,10),randint(0,9)]#self.coordinate_converter(input('\nИгрок: ходит =>'))
+                    coordinate = self.coordinate_converter(input('\nИгрок: ходит =>')) #[randint(1,10),randint(0,9)] (для теста)
                     if coordinate == -1: return 0
 
                 print()
@@ -155,11 +155,10 @@ class Game:
                 gen_table.view_table(player.table_1, player.table_2)
                 walk = 0
         else:
-            print()
             if len(player.ships_count):
-                print('Игрок выйграл! Поздравляю!')
+                print('\nИгрок выйграл! Поздравляю!')
             else:
-                print('Бот выиграл! Поздравляю!')
+                print('\nБот выиграл! Поздравляю!')
 
             print('кол-во кораблей игрока\t',len(player.ships_count))
             print('кол-во кораблей бота\t',len(bot.ships_count))
@@ -182,8 +181,10 @@ class Game:
     def coordinate_converter(self,coordinate):
         temp_coordinate = []
 
-        # если 0, то выход из цикла игры (ДОРАБОТАТЬ)
+        # если 0, то выход из цикла игры
         if coordinate == '0': return -1
+
+        # если пустая строка, то по новой.
         if coordinate == '': return 1
 
         ch = 0
