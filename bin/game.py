@@ -1,8 +1,13 @@
 '''
 Модуль процесса игры
 '''
+
 from time import sleep
 from random import randint
+
+from bin.player import Player
+from bin.bot import Bot
+from bin.gentable import GenTable
 
 class Game:
     ''' Game - отвечает за процесс игры
@@ -19,10 +24,6 @@ class Game:
 
     ''' Режимы игры '''
     def game_bot(self):
-        # init data
-        from bin.player import Player
-        from bin.bot import Bot
-        from bin.gentable import GenTable
         bot = Bot()
         player = Player()
         gen_table = GenTable()
