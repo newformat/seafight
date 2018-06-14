@@ -33,17 +33,26 @@ if __name__ == "__main__":
            print('такого пункта в меню нет.')
            continue
 
-        # запуск режимов игры (набросок)
-       # игра с ботом
+       # запуск режимов игры
        if item == 1:
            game.game_bot()
-           #print('Режим \'игра с ботом\' в разработке..')
-        # игра по LAN сети
        elif item == 2:
-           print('Режим \'Игра по LAN\' в разработке..')
-        # игра по Интернету
+           ''' lan режим '''
+           # 1 - создать игру / 2 - найти игру
+           menu.lan_menu()
+           ch = ''
+           while True:
+               ch = input('=>')
+               if ch == '1':
+                   game.game_lan_server()
+                   break
+               elif ch == '2':
+                   game.game_lan_client()
+                   break
+               else:
+                   continue
        elif item == 3:
            print('Режим \'Игра по интернету\' в разработке..')
-        # пропускаем цикл.
+           continue
        else:
            continue

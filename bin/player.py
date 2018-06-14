@@ -2,6 +2,7 @@
 Файл, отвечающий за механику действий игрока
 '''
 
+# Игрок 1
 class Player:
     '''
     table_1 - таблица игрока с кораблями
@@ -10,6 +11,7 @@ class Player:
     def __init__(self):
         self.table_1 = {}
         self.table_2 = {}
+        self.name = None
         self.ship_symbol = '@'  # вид палубы
         self.ships_count = None # корабли с координатами
 
@@ -31,4 +33,3 @@ class Player:
     def modify_table_2(self, coordinate, label):
         self.table_2[coordinate[0]][coordinate[1]] = label
         return
-
