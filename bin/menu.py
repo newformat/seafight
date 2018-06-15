@@ -22,6 +22,7 @@ class Menu:
         #print('2 - в ручную')
         print('0 - отмена')
 
+    # заморожено
     def ranking_manual_print(self):
         print('тут придумать метод ввода ручной установки кораблей')
 

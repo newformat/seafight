@@ -5,25 +5,26 @@
 '''
 from bin.menu import Menu
 from random import randint
-from copy import deepcopy   # copy - модуль поверхностного(.copy) и полного(.deepcopy) копирования объектов
-''' класс создания таблицы и расстановка кораблей
-GenTable - класс, отвечающий за построение таблиц
-    attribute:
-        __menu          отвечат за вывод меню выбора расстановки кораблей
-        __item_table    вариант выбора по умолчанию
-        up              символы для пустого поля
-        __table         образец пустой таблицы
-    method:
-        menu_ship       пункт выбора расстановки кораблей (заморожено)
-        view_table      вывод таблиц на экран
-        get_table       возвращает копию пустой таблицы
-        get_ships       возвращает кол-во кораблей с координатами
-        ranking_manual  ручное распределение кораблей
-        ranking_auto    автоматическое распределение кораблей на игрока
-        dots_check      проверка точки вокруг своей оси. для установки палубы
-        temp_coordinate пополняет массив координат для установки корабля      
-'''
+from copy import deepcopy
+
 class GenTable:
+    ''' класс создания таблицы и расстановка кораблей
+    GenTable - класс, отвечающий за построение таблиц
+        attribute:
+            __menu          отвечат за вывод меню выбора расстановки кораблей
+            __item_table    вариант выбора по умолчанию
+            up              символы для пустого поля
+            __table         образец пустой таблицы
+        method:
+            menu_ship       пункт выбора расстановки кораблей (заморожено)
+            view_table      вывод таблиц на экран
+            get_table       возвращает копию пустой таблицы
+            get_ships       возвращает кол-во кораблей с координатами
+            ranking_manual  ручное распределение кораблей
+            ranking_auto    автоматическое распределение кораблей на игрока
+            dots_check      проверка точки вокруг своей оси. для установки палубы
+            temp_coordinate пополняет массив координат для установки корабля
+    '''
     def __init__(self):
         self.__menu = Menu()
         self.__item_table = '0'
@@ -51,7 +52,6 @@ class GenTable:
             return self.ranking_auto(table)
         else:
             return self.ranking_manual(table)
-
 
 
     def view_table(self, table_a, table_b):
@@ -83,10 +83,8 @@ class GenTable:
             print(' '.join(table_a[i]), 2 * ' ', i, '', ' '.join(table_b[i]))
 
 
-
     def get_table(self):
         return deepcopy(self.__table)
-
 
 
     def get_ships(self):
@@ -100,11 +98,9 @@ class GenTable:
         return temp
 
 
-
     def ranking_manual(self,table):
         print('\"в ручную\" -  в стадии разработки')
         return table
-
 
 
     def ranking_auto(self,table):
@@ -141,7 +137,6 @@ class GenTable:
             # в какую сторону устанавливать: низ/право(0) или вверх/лево(1)
             direction_correct = randint(0, 1)
 
-
             if table[a][b] != self.ship_symbol:
                 coordinates_ship = []
                 for ship in ships[cnt]:
@@ -175,9 +170,7 @@ class GenTable:
                 continue
 
             cnt+=1
-
         return table
-
 
 
     def temp_coordinate(self,a,b,coordinates_ship,table):
@@ -186,7 +179,6 @@ class GenTable:
         else:
             coordinates_ship.append([a, b])
             return 0
-
 
 
     def dots_check(self,a,b,table_cp):

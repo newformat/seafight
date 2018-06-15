@@ -1,9 +1,8 @@
-#!/usr/bin/python3
-# свои модули
+#!/usr/bin/env python3
+
 from bin.menu import Menu
 from bin.game import Game
 
-# приветсвие
 def welcome_print():
     cnt_shebang=36
     print(cnt_shebang*'#')
@@ -20,17 +19,14 @@ item = -1
 #run application
 if __name__ == "__main__":
     welcome_print()
-
     while item != 0:
        menu.welcome()
-
        try: item = int(input('=>'))
        except:
-           print('некорретный ввод')
            continue
 
        if item > menu.m_item or item < 0:
-           print('такого пункта в меню нет.')
+           print('такого пункта нет.')
            continue
 
        # запуск режимов игры

@@ -13,12 +13,19 @@ from bin.network import *
 
 class Game:
     ''' Game - отвечает за процесс игры
+    attribute:
+        abc     строка для перебора части координаты (ось X)
     method:
         game_bot                игра с ботом
+        game_lan_server         игра по сети, сервер
+        game_lan_client         игра по сети, клиент
+        game_eth                игра по интернету
         coordinate_converter    конвертация данных координат для массива (напр. Б1 - > 2,0)
         dots_install            установка точек вокруг пораженного корабля
         status_check            проверка на статусы, состояние кораблей
         status_install          установка статуса палубы
+        check_name              получаем имя, проверяем валидность.
+        check_request           проверка, успешно ли пришел запрос на клиент
     '''
     def __init__(self):
         self.abc = 'АБВГДЕЖЗИК'
@@ -167,10 +174,7 @@ class Game:
             print()
 
 
-
-
     ''' игра по LAN-сети '''
-    # если мы сервер
     def game_lan_server(self):
         player = Player()
         player_2 = Player()
@@ -202,13 +206,20 @@ class Game:
         # прогон первого запроса, получаем имя
         # accept request client and get data request and  init player_2.name
         print('Ждем игрока...')
-        lserver.accept_request()
+        if lserver.accept_request():
+            return 1
+        else:
+            print('к нам присоединились...')
         player_2.name = lserver.get_request_data()
+        if player_2.name == -1:
+            return 1
 
         # имя клиента - если 1, значит имя очень большое или маленькое
         while self.check_name(player_2.name):
             lserver.send_data('name=false')
             player_2.name = lserver.get_request_data()
+            if player_2.name == -1:
+                return 1
         else:
             lserver.send_data('name=true')
 
@@ -218,9 +229,6 @@ class Game:
             player.name = input('Введите имя => ')
 
         # отправляем первичные данные клиенту
-        # имя сервера               - player.name
-        # таблицу кораблей клиента  - player_2.table_1
-        # таблицу оппонента         - player_2.table_2
         lserver.send_data((
                 player.name,
                 player_2.table_1,
@@ -232,9 +240,8 @@ class Game:
             print('Имя игрока_2:', player_2.name)
             print('Начинаем игру...')
         else:
-            print('что-то пошло не так... game.py 225 строка.')
-
-
+            print('что-то пошло не так...')
+            return 1
 
         walk = 0
         while len(player.ships_count) != 0 and len(player_2.ships_count) != 0:
@@ -243,11 +250,13 @@ class Game:
             if not walk:
                 while type(coordinate) != list:
                     coordinate = self.coordinate_converter(
-                        input('\n{0}: ходит =>'.format(player.name)))
+                        input('{0}: ходит =>'.format(player.name)))
                     if coordinate == -1:
                         # -------- сетевая роль сервер -> клиент ------------
-                        lserver.send_data((player_2.table_1, player_2.table_2, 'exit_server'))
-                        self.check_request(lserver)
+                        lserver.send_data('exit_server')
+                        if self.check_request(lserver):
+                            return 1
+                        lserver.socket_close()
                         # ---------------------------------------------------
                         return 0
 
@@ -264,7 +273,8 @@ class Game:
                         print('{0}: убил...'.format(player_2.name))
                         # -------- сетевая роль сервер -> клиент ------------
                         lserver.send_data((player_2.table_1,player_2.table_2,'убил...',walk))
-                        self.check_request(lserver)
+                        if self.check_request(lserver):
+                            return 1
                         # ---------------------------------------------------
                         continue
                     else:
@@ -273,7 +283,8 @@ class Game:
                         print('{0}: ранил...'.format(player_2.name))
                         # -------- сетевая роль сервер -> клиент ------------
                         lserver.send_data((player_2.table_1,player_2.table_2,'ранил...',walk))
-                        self.check_request(lserver)
+                        if self.check_request(lserver):
+                            return 1
                         # ---------------------------------------------------
                         continue
                 # сюда стреляли уже
@@ -289,9 +300,9 @@ class Game:
                     print('\n{0}: мимо =Р\n'.format(player_2.name))
                     # -------- сетевая роль сервер -> клиент ------------
                     lserver.send_data((player_2.table_1, player_2.table_2, 'мимо =Р',walk))
-                    self.check_request(lserver)
+                    if self.check_request(lserver):
+                        return 1
                     # ---------------------------------------------------
-
                 walk = 1
             # Ход игрока_2
             else:
@@ -299,21 +310,25 @@ class Game:
                     # -------- сетевая роль сервер -> клиент ------------
                     lserver.send_data('get_coordinate')
                     str_coordinate = lserver.get_request_data()
+                    if str_coordinate == -1:
+                        return 1
                     # ---------------------------------------------------
-                    print('\n{0}: ходит =>'.format(player_2.name))
+                    print('\n{0}: ходит'.format(player_2.name),'ждем...')
                     coordinate = self.coordinate_converter(str_coordinate)
 
                     # ответить на запрос о том, что клиент успешно покинул игру.
                     if coordinate == -1:
                         # -------- сетевая роль сервер -> клиент ------------
                         lserver.send_data('exit_client')
-                        self.check_request(lserver)
+                        if self.check_request(lserver):
+                            return 1
                         # ---------------------------------------------------
                         return 0
                 else:
                     # если координаты корректны
                     lserver.send_data('coordinate_yes')
-                    self.check_request(lserver)
+                    if self.check_request(lserver):
+                        return 1
 
                 print()
                 result = player.get_hit(coordinate)
@@ -328,7 +343,8 @@ class Game:
                         print('{0}: убил...'.format(player.name))
                         # -------- сетевая роль сервер -> клиент ------------
                         lserver.send_data((player_2.table_1, player_2.table_2, 'убил...',walk))
-                        self.check_request(lserver)
+                        if self.check_request(lserver):
+                            return 1
                         # ---------------------------------------------------
                         continue
                     else:
@@ -337,7 +353,8 @@ class Game:
                         print('{0}: ранил...'.format(player.name))
                         # -------- сетевая роль сервер -> клиент ------------
                         lserver.send_data((player_2.table_1, player_2.table_2, 'ранил...',walk))
-                        self.check_request(lserver)
+                        if self.check_request(lserver):
+                            return 1
                         # ---------------------------------------------------
                         continue
                 # сюда стреляли уже
@@ -345,7 +362,8 @@ class Game:
                     print('стреляли уже')
                     # -------- сетевая роль сервер -> клиент ------------
                     lserver.send_data((player_2.table_1, player_2.table_2, 'стреляли',walk))
-                    self.check_request(lserver)
+                    if self.check_request(lserver):
+                        return 1
                     # ---------------------------------------------------
                     continue
                 # не попал
@@ -357,10 +375,10 @@ class Game:
                     print('\n{0}: мимо =Р\n'.format(player.name))
                     # -------- сетевая роль сервер -> клиент ------------
                     lserver.send_data((player_2.table_1, player_2.table_2, 'мимо =Р',walk))
-                    self.check_request(lserver)
+                    if self.check_request(lserver):
+                        return 1
                     # ---------------------------------------------------
                 walk = 0
-
         else:
             # 1 - игрок_1 вин / 2 - игрок_2 вин
             count_player = 0
@@ -376,13 +394,13 @@ class Game:
             print()
             # -------- сетевая роль сервер -> клиент ------------
             lserver.send_data((player_2.table_1, player_2.table_2, count_player,'end_game'))
-            self.check_request(lserver)
+            if self.check_request(lserver):
+                return 1
             lserver.socket_close()
             return 0
             # ---------------------------------------------------
 
 
-    # если мы клиент
     def game_lan_client(self):
         table = GenTable()
         player_2 = Player()
@@ -390,16 +408,24 @@ class Game:
         player_enemy = None
 
         # коннект с сервером
-        client.connected()
+        if client.connected():
+            return 0
 
-        # вводим имя
         player_2.name = input('введите имя => ')
         client.send_data(player_2.name)
         # если имя не соответствует требованию (не более 9 и не менее 2 символов на имя)
-        while client.get_answer() == 'name=false':
+        answer = client.get_answer()
+        if type(answer) == int:
+            return 1
+
+        while answer == 'name=false':
             # вводим еще раз соответствуя требованиям
             player_2.name = input('введите имя => ')
             client.send_data(player_2.name)
+            answer = client.get_answer()
+        else:
+            if type(answer) == int:
+                return 1
 
         # получаем первичные ответные данные
         INFORMATION = client.get_answer()
@@ -407,24 +433,27 @@ class Game:
         if type(INFORMATION) == tuple:
             # отправляем серверу что все хорошо
             client.send_data(True)
+        elif type(INFORMATION) == int:
+            return 1
         else:
+            # можно убрать.
             print('что-то не так.. exit(1)')
             exit(1)
 
         # инит данных
-        player_enemy = INFORMATION[0]       # имя оппонента
-        player_2.table_1 = INFORMATION[1]   # таблица кораблей
-        player_2.table_2 = INFORMATION[2]   # таблица выстрелов
-
+        player_enemy = INFORMATION[0]
+        player_2.table_1 = INFORMATION[1]
+        player_2.table_2 = INFORMATION[2]
 
         # Вывод таблиц на экран
-        print()
-        table.view_table(player_2.table_1,player_2.table_2)
+        print(); table.view_table(player_2.table_1,player_2.table_2); print()
+        print(player_enemy,'ходит первым.')
         # ответ запроса сервера
         result_request = client.get_answer()
+        if type(result_request) == int:
+            return 1
         # игра не закончена
         while result_request[-1] != 'end_game':
-
             # выход во время игры
             if result_request in ['exit_client', 'exit_server']:
                 print('выход из игры.. возврат в главное меню...')
@@ -434,35 +463,42 @@ class Game:
             while result_request == 'get_coordinate':
                 client.send_data(input('ваш ход => '))
                 result_request = client.get_answer()
+                if type(result_request) == int:
+                    return 1
             else:
                 if result_request == 'coordinate_yes':
                     client.send_data(True)
                     result_request = client.get_answer()
+                    if type(result_request) == int:
+                        return 1
 
             # walk = 0 , ходит сервер (ничего не делаем)
             if (result_request[-2] in ['убил...', 'ранил...', 'мимо =Р']) and result_request[-1] == 0 :
                 client.send_data(True)
-                print()
-                table.view_table(result_request[0],result_request[1])
-                print(player_enemy,result_request[-2])
+                print(); table.view_table(result_request[0],result_request[1]); print()
+                print(player_enemy,result_request[-2],('следуюший ход. ждем...' if result_request[-2] in ['убил...','ранил...'] else ''))
                 result_request = client.get_answer()
+                if type(result_request) == int:
+                    return 1
                 continue
 
             # walk = 1, ходит клиент
             if (result_request[-2] in ['убил...', 'ранил...', 'стреляли']) and result_request[-1] == 1 :
                 client.send_data(True)
-                table.view_table(result_request[0],result_request[1])
+                print(); table.view_table(result_request[0],result_request[1]); print();
                 print(player_enemy,result_request[-2])
                 result_request = client.get_answer()
+                if type(result_request) == int:
+                    return 1
             elif result_request[-2] == 'мимо =Р':
                 client.send_data(True)
-                table.view_table(result_request[0],result_request[1])
+                print(); table.view_table(result_request[0],result_request[1]); print()
                 print(player_enemy,result_request[-2])
                 result_request = client.get_answer()
+                if type(result_request) == int:
+                    return 1
         else:
-            # lserver.send_data((player_2.table_1, player_2.table_2, count_player,'end_game'))
-            # count_player - 1 ( player 1 win), 2 - (player 2 win)
-            table.view_table(result_request[0],result_request[1])
+            print(); table.view_table(result_request[0],result_request[1]); print()
             if result_request[-2] == 2:
                 print(player_2.name,' выиграл!')
                 print(player_enemy, 'проиграл!')
@@ -475,12 +511,8 @@ class Game:
         return 0
 
 
-
-
-    # игра по интернету
     def game_eth(self):
         return
-
 
 
     # ###### ОСТАЛЬНЫЕ МЕТОДЫ #######
@@ -583,24 +615,21 @@ class Game:
                 status_ship[-1] = 'w'
 
 
-    # получаем имя, проверяем валидность.
     def check_name(self, client_name):
-
         if len(client_name) < 2:
             print('Имя игрока меньше 2 символов!')
             return 1
         elif len(client_name) > 9:
             print('Имя игрока больше 9 символов!')
             return 1
-
         return 0
 
-    # проверка, успешно ли пришел запрос на клиент
+
     def check_request(self, handle):
         if handle.get_request_data() != True:
-            print('сообщение не долшо, аварийный выход')
+            print('сообщение не долшо, возврат в главное меню')
             handle.socket_close()
-            exit(1)
+            return 1
         else:
             return 0
 

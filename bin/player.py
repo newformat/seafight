@@ -7,6 +7,11 @@ class Player:
     '''
     table_1 - таблица игрока с кораблями
     table_2 - таблица оппонента для ударов
+    methods:
+        modify_table    отметка удара противника на таблице кораблей
+        modify_table_2  отметка удара второй таблицы противника
+        get_hit         принять удар
+
     '''
     def __init__(self):
         self.table_1 = {}
@@ -16,7 +21,6 @@ class Player:
         self.ships_count = None # корабли с координатами
 
 
-    # принять удар
     def get_hit(self, coordinate):
         if self.table_1[coordinate[0]][coordinate[1]] == self.ship_symbol:
             return 0
@@ -24,12 +28,13 @@ class Player:
             return -1
         else:
             return 1
-    # отметка удара противника на таблице кораблей
+
+
     def modify_table(self,coordinate,label):
         self.table_1[coordinate[0]][coordinate[1]] = label
         return
 
-    # отметка удара второй таблицы противника
+
     def modify_table_2(self, coordinate, label):
         self.table_2[coordinate[0]][coordinate[1]] = label
         return

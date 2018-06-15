@@ -27,7 +27,6 @@ class Bot:
         self.rnd = random.randint(0,1)
 
 
-
     def get_hit(self, coordinate):
         if self.table_1[coordinate[0]][coordinate[1]] == self.ship_symbol:
             return 0
@@ -35,7 +34,6 @@ class Bot:
             return -1
         else:
             return 1
-
 
 
     def set_hit(self,status):
@@ -105,7 +103,6 @@ class Bot:
                 exit(1)
 
 
-
     def check_hand(self,hid,up,down):
         temp=0
         inc=1
@@ -140,7 +137,6 @@ class Bot:
                 continue
 
 
-    # с верху вниз, с лева на право.
     def strategy_x(self):
         if self.a <=10 and self.b <=9:
             return 0
@@ -148,7 +144,6 @@ class Bot:
             return 1
 
 
-    # отметка удара противника на таблице кораблей
     def modify_table(self,coordinate,label):
         self.table_1[coordinate[0]][coordinate[1]] = label
 
